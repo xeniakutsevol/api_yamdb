@@ -21,10 +21,10 @@ class Title(models.Model):
     year = models.IntegerField()
     description = models.TextField()
     category = models.ForeignKey(
-        Category,
+        Category,on_delete = models.SET_NULL,
         related_name="titles", blank=True, null=True)
     genre = models.ForeignKey(
-        Genre,
+        Genre, on_delete = models.SET_NULL,
         related_name="titles", blank=True, null=True)
     
     def __str__(self):
