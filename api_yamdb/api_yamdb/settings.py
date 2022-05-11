@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'users',
     'reviews',
     'api',
+    'rest_framework',
 ]
 
 AUTH_USER_MODEL = 'users.User'
