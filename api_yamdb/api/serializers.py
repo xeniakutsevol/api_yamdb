@@ -5,30 +5,6 @@ from reviews.models import Title, Category, Genre
 User = get_user_model()
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        slug_field='titles',
-        queryset=Genre.objects.all()
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Title
-
-class CategorySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Category
-
-
-class GenreSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Genre
-
-
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -81,3 +57,28 @@ class UserAdminSerializer(serializers.ModelSerializer):
         if data == 'me':
             raise serializers.ValidationError('Невалидный username.')
         return data
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='titles',
+        queryset=Genre.objects.all()
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Category
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Genre
