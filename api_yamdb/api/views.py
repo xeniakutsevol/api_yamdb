@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, mixins
 from django.contrib.auth import get_user_model
-from .serializers import SignUpSerializer, UserAdminSerializer
+from .serializers import SignUpSerializer, UserAdminSerializer, Title, Category, Genre
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -54,3 +54,27 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserAdminSerializer
     permission_classes = (UserAdminPermission,)
+    
+    
+class TitlesViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer    
+#Это в процессе
+
+
+
+class CreateRetrieveViewSet(mixins.RetrieveModelMixin, 
+                            mixins.ListModelMixin, mixins.DestroyModelMixin, 
+                            viewsets.GenericViewSet): 
+
+    pass
+
+
+class CategoriesViewSet(CreateRetrieveViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenresViewSet(CreateRetrieveViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer

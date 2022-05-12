@@ -3,6 +3,7 @@ from rest_framework import routers
 from .views import (SignUpViewSet, UsersAdminViewSet, obtain_token,
                     CategoriesViewSet, GenresViewSet, TitlesViewSet)
 
+
 app_name = 'api'
 
 v1_router = routers.DefaultRouter()
