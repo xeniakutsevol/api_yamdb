@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, mixins
 from django.contrib.auth import get_user_model
-from .serializers import SignUpSerializer, UserAdminSerializer, Title, Category, Genre
+from .serializers import SignUpSerializer, UserAdminSerializer, Title, Category, Genre, TitleReadSerializer,  CategorySerializer, GenreSerializer, TitleWriteSerializer
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -9,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import api_view, permission_classes
 from .permissions import UserAdminPermission
+from reviews.models import Title, Category, Genre
+
 
 User = get_user_model()
 
@@ -58,9 +60,11 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
     
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer    
-#Это в процессе
 
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer    
 
 
 class CreateRetrieveViewSet(mixins.RetrieveModelMixin, 
@@ -73,8 +77,12 @@ class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
 class CategoriesViewSet(CreateRetrieveViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenresViewSet(CreateRetrieveViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    search_fields = ('name',)
+    lookup_field = 'slug'
