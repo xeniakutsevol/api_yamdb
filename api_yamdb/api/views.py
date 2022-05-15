@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, mixins
 from django.contrib.auth import get_user_model
-from .serializers import (CommentSerializer, ReviewSerializer, SignUpSerializer, UserAdminSerializer,
-                          TitleSerializer, CategorySerializer, GenreSerializer)
+from .serializers import (SignUpSerializer, UserAdminSerializer, CommentSerializer, 
+                          ReviewSerializer, TitleReadSerializer, CategorySerializer,
+                          GenreSerializer, TitleWriteSerializer)
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -61,8 +62,12 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
-# Это в процессе
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer    
+
 
 
 class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
@@ -75,12 +80,16 @@ class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
 class CategoriesViewSet(CreateRetrieveViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenresViewSet(CreateRetrieveViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -112,3 +121,4 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review, pk=self.kwargs.get('review_id'),
             title__id=self.kwargs.get('title_id')) 
         serializer.save(author=self.request.user, review=review)
+

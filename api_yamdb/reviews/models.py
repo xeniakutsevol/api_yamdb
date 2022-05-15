@@ -28,10 +28,9 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         related_name="titles", blank=True, null=True)
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         Genre,
-        on_delete=models.SET_NULL,
-        related_name="titles", blank=True, null=True)
+        related_name="titles", blank=True)
     
     def __str__(self):
         return self.name
