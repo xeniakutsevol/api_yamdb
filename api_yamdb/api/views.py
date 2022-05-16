@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 from .permissions import ReviewCommentPermission, UserAdminPermission
 from reviews.models import Title, Category, Genre, Review
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from .filters import TitleFilter
 
 
 User = get_user_model()
@@ -96,11 +96,7 @@ class GenresViewSet(CreateRetrieveViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> 37e3414cd7a59ac3914f7d2ab0689866ed2f650a
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
