@@ -36,7 +36,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'role')
+        fields = ('username', 'email', 'role', 'bio', 'first_name',
+                  'last_name')
         extra_kwargs = {
             'username': {
                 'validators': [
@@ -59,6 +60,7 @@ class UserAdminSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Невалидный username.')
         return data
 
+
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -69,36 +71,36 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ['name', 'slug',]
+        fields = ['name', 'slug', ]
         model = Genre
 
-        
+
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    #rating = serializers.IntegerField(read_only=True)
-    
+    # rating = serializers.IntegerField(read_only=True)
+
     class Meta:
         fields = '__all__'
         model = Title
-    
+
 
 class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
-        queryset = Genre.objects,
-        slug_field = 'slug',
+        queryset=Genre.objects,
+        slug_field='slug',
         many=True
     )
 
     category = serializers.SlugRelatedField(
-        queryset = Category.objects,
-        slug_field = 'slug'
+        queryset=Category.objects,
+        slug_field='slug'
     )
 
     class Meta:
         fields = '__all__'
         model = Title
-        
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -139,7 +141,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                         queryset=User.objects.all())
                 ]
             },
-            'author':{
+            'author': {
                 'valiators': [
                     validators.UniqueValidator(
                         queryset=User.objects.all())

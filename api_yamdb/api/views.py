@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, status, mixins
+from rest_framework import viewsets, permissions, status, mixins, filters
 from django.contrib.auth import get_user_model
-from .serializers import (SignUpSerializer, UserAdminSerializer, CommentSerializer, 
-                          ReviewSerializer, TitleReadSerializer, CategorySerializer,
+from .serializers import (SignUpSerializer, UserAdminSerializer,
+                          CommentSerializer, ReviewSerializer,
+                          TitleReadSerializer, CategorySerializer,
                           GenreSerializer, TitleWriteSerializer)
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
@@ -57,7 +58,9 @@ def obtain_token(request):
 class UsersAdminViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserAdminSerializer
-    permission_classes = (UserAdminPermission,)
+    permission_classes = (permissions.IsAuthenticated, UserAdminPermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -66,8 +69,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
-        return TitleWriteSerializer    
-
+        return TitleWriteSerializer
 
 
 class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
@@ -89,7 +91,7 @@ class GenresViewSet(CreateRetrieveViewSet):
     serializer_class = GenreSerializer
     search_fields = ('name',)
     lookup_field = 'slug'
-    
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -119,6 +121,5 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         review = get_object_or_404(
             Review, pk=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')) 
+            title__id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, review=review)
-
