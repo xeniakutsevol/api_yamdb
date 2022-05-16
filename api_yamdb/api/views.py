@@ -10,10 +10,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import api_view, permission_classes
 from .permissions import ReviewCommentPermission, UserAdminPermission
 from reviews.models import Title, Category, Genre, Review
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
 
 User = get_user_model()
 
@@ -65,14 +67,15 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
 
-
-class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
+class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                             mixins.ListModelMixin, mixins.DestroyModelMixin,
                             viewsets.GenericViewSet):
 
@@ -82,16 +85,22 @@ class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
 class CategoriesViewSet(CreateRetrieveViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    lookup_field = 'slug'
+    lookup_field = 'slug'    
 
 
 class GenresViewSet(CreateRetrieveViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 37e3414cd7a59ac3914f7d2ab0689866ed2f650a
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
