@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, mixins
 from django.contrib.auth import get_user_model
+from api.filters import TitleFilter
 from .serializers import (SignUpSerializer, UserAdminSerializer, CommentSerializer, 
                           ReviewSerializer, TitleReadSerializer, CategorySerializer,
                           GenreSerializer, TitleWriteSerializer)
@@ -9,10 +10,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import api_view, permission_classes
 from .permissions import ReviewCommentPermission, UserAdminPermission
 from reviews.models import Title, Category, Genre, Review
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
 
 User = get_user_model()
 
@@ -62,6 +65,8 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -69,8 +74,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer    
 
 
-
-class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
+class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                             mixins.ListModelMixin, mixins.DestroyModelMixin,
                             viewsets.GenericViewSet):
 
@@ -80,16 +84,18 @@ class CreateRetrieveViewSet(mixins.RetrieveModelMixin,
 class CategoriesViewSet(CreateRetrieveViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    lookup_field = 'slug'
+    lookup_field = 'slug'    
 
 
 class GenresViewSet(CreateRetrieveViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
-    
+  
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
