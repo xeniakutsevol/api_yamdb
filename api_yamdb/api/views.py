@@ -4,13 +4,14 @@ from django.contrib.auth import get_user_model
 from .serializers import (SignUpSerializer, UserAdminSerializer,
                           CommentSerializer, ReviewSerializer,
                           TitleReadSerializer, CategorySerializer,
-                          GenreSerializer, TitleWriteSerializer)
+                          GenreSerializer, TitleWriteSerializer,
+                          UserAdminPatchSerializer)
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from .permissions import ReviewCommentPermission, UserAdminPermission
 from reviews.models import Title, Category, Genre, Review
 from django_filters.rest_framework import DjangoFilterBackend
@@ -59,10 +60,33 @@ def obtain_token(request):
 
 class UsersAdminViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserAdminSerializer
     permission_classes = (permissions.IsAuthenticated, UserAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    lookup_field = 'username'
+
+    @action(
+        methods=['get', 'patch'],
+        detail=True,
+        url_path='me'
+    )
+    def get_object(self):
+        if self.kwargs.get('username') == 'me':
+            return self.request.user
+        return super(UsersAdminViewSet, self).get_object()
+
+    def destroy(self, request, *args, **kwargs):
+        if self.kwargs.get('username') == 'me':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_serializer_class(self):
+        if (self.request.method == 'PATCH'
+           and self.kwargs.get('username') == 'me'):
+            return UserAdminPatchSerializer
+        return UserAdminSerializer
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -74,6 +98,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
+
 
 class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                             mixins.ListModelMixin, mixins.DestroyModelMixin,
@@ -87,7 +112,7 @@ class CategoriesViewSet(CreateRetrieveViewSet):
     serializer_class = CategorySerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    lookup_field = 'slug'    
+    lookup_field = 'slug'
 
 
 class GenresViewSet(CreateRetrieveViewSet):
