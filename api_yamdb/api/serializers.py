@@ -61,6 +61,35 @@ class UserAdminSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserAdminPatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'role', 'bio', 'first_name',
+                  'last_name')
+        extra_kwargs = {
+            'role': {'read_only': True},
+            'username': {
+                'validators': [
+                    validators.UniqueValidator(
+                        queryset=User.objects.all()
+                    )
+                ]
+            },
+            'email': {
+                'validators': [
+                    validators.UniqueValidator(
+                        queryset=User.objects.all()
+                    )
+                ]
+            }
+        }
+
+    def validate_username(self, data):
+        if data == 'me':
+            raise serializers.ValidationError('Невалидный username.')
+        return data
+
+
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:

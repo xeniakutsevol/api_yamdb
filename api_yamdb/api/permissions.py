@@ -4,7 +4,8 @@ from rest_framework.permissions import SAFE_METHODS
 
 class UserAdminPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'admin'
+        return (request.user.role == 'admin' or request.user.is_superuser
+                or view.kwargs.get('username') == 'me')
 
 
 class ReviewCommentPermission(permissions.BasePermission):
