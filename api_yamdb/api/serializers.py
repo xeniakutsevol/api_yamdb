@@ -136,13 +136,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         unique_together = ('author', 'title')
         extra_kwargs = {
             'title_id': {
-                'valiators': [
+                'validators': [
                     validators.UniqueValidator(
                         queryset=User.objects.all())
                 ]
             },
             'author': {
-                'valiators': [
+                'validators': [
                     validators.UniqueValidator(
                         queryset=User.objects.all())
                 ]
