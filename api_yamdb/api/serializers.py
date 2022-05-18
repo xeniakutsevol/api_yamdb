@@ -107,7 +107,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    # rating = serializers.IntegerField(read_only=True)
+    #rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -133,11 +133,12 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True,
+        slug_field='username'
     )
 
     class Meta:
-        fields = '__all__'
+        exclude =('review',)
         model = Comment
 
 
@@ -148,19 +149,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
-        if not self.context['request'].method == 'POST':
-            return attrs
-        author = self.context['request'].user
-        title = self.context['request'].parser_context['view'].kwargs.get(
-            'title_id')
-        if Review.objects.filter(title=title, author=author).exist():
+        #if not self.context['request'].method == 'POST':
+           # return attrs
+        #author = self.context['request'].user
+        #title = self.context['request'].parser_context['view'].kwargs.get(
+            #'title_id')
+        #if Review.objects.filter(title=title, author=author).exists():
+            #raise serializers.ValidationError(
+               # 'Вы можете написать только один отзыв на произведение'
+           # )
+        #return attrs
+        is_exist = Review.objects.filter(
+            author=self.context['request'].user,
+            title=self.context['view'].kwargs.get('title_id')).exists()
+        if is_exist and self.context['request'].method == 'POST':
             raise serializers.ValidationError(
                 'Вы можете написать только один отзыв на произведение'
             )
         return attrs
 
     class Meta:
-        fields = '__all__'
+        exclude =('title',)
         model = Review
         unique_together = ('author', 'title')
         extra_kwargs = {
