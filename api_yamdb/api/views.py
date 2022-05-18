@@ -93,8 +93,6 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    #queryset = Title.objects.annotate(
-        #rating=Avg('reviews__score')).order_by('id')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAdminUserOrReadOnly,)     
@@ -170,19 +168,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self, *args, **kwargs):
         review = get_object_or_404(
             Review, pk=self.kwargs.get('review_id'))
-        #return review.comments.all()
-        #title_id = self.kwargs['title_id']
-        #review_id = self.kwargs['review_id']
-        #review = get_object_or_404(
-           # Review.objects.filter(title_id=title_id),
-           # pk=review_id
-        #)
         return review.comments.all()
 
     def perform_create(self, serializer):
-        #title_id = self.kwargs['title_id']
-        #review_id = self.kwargs['review_id']
         review = get_object_or_404(
             Review, pk=self.kwargs.get('review_id'))
-            #title__id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, review=review)

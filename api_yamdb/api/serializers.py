@@ -161,18 +161,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         exclude =('title',)
         model = Review
-        #unique_together = ('author', 'title')
-        #extra_kwargs = {
-            #'title_id': {
-                #'validators': [
-                   # validators.UniqueValidator(
-                       # queryset=User.objects.all())
-                #]
-            #},
-           # 'author': {
-               # 'validators': [
-                   # validators.UniqueValidator(
-                      #  queryset=User.objects.all())
-               # ]
-           # },
-        #}
+        unique_together = ('author', 'title')
+        extra_kwargs = {
+            'title_id': {
+                'validators': [
+                    validators.UniqueValidator(
+                        queryset=User.objects.all())
+                ]
+            },
+            'author': {
+               'validators': [
+                   validators.UniqueValidator(
+                        queryset=User.objects.all())
+                ]
+            },
+        }
