@@ -102,8 +102,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
 
-class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                            mixins.ListModelMixin, mixins.DestroyModelMixin,
+class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
                             viewsets.GenericViewSet):
 
     pass
@@ -126,16 +125,6 @@ class GenresViewSet(CreateRetrieveViewSet):
     search_fields = ('name',)
     lookup_field = 'slug'
     permission_classes = (IsAdminUserOrReadOnly,)    
-
-    def destroy(self, request, *args, **kwargs):
-        if self.kwargs.get('name') == '':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-     
-
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
