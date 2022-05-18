@@ -149,16 +149,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
-        #if not self.context['request'].method == 'POST':
-           # return attrs
-        #author = self.context['request'].user
-        #title = self.context['request'].parser_context['view'].kwargs.get(
-            #'title_id')
-        #if Review.objects.filter(title=title, author=author).exists():
-            #raise serializers.ValidationError(
-               # 'Вы можете написать только один отзыв на произведение'
-           # )
-        #return attrs
         is_exist = Review.objects.filter(
             author=self.context['request'].user,
             title=self.context['view'].kwargs.get('title_id')).exists()
@@ -171,18 +161,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         exclude =('title',)
         model = Review
-        unique_together = ('author', 'title')
-        extra_kwargs = {
-            'title_id': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all())
-                ]
-            },
-            'author': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all())
-                ]
-            },
-        }
+        #unique_together = ('author', 'title')
+        #extra_kwargs = {
+            #'title_id': {
+                #'validators': [
+                   # validators.UniqueValidator(
+                       # queryset=User.objects.all())
+                #]
+            #},
+           # 'author': {
+               # 'validators': [
+                   # validators.UniqueValidator(
+                      #  queryset=User.objects.all())
+               # ]
+           # },
+        #}
