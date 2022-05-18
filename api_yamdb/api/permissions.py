@@ -30,3 +30,10 @@ class ReviewCommentPermission(permissions.BasePermission):
             )
         if request.user.is_authenticated:
             return True
+
+
+class IsAdminUserOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return (request.user.is_authenticated and request.user.role == 'admin')

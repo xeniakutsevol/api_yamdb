@@ -12,7 +12,7 @@ from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes, action
-from .permissions import ReviewCommentPermission, UserAdminPermission
+from .permissions import ReviewCommentPermission, UserAdminPermission, IsAdminUserOrReadOnly
 from reviews.models import Title, Category, Genre, Review
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
@@ -93,6 +93,8 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    permission_classes = (IsAdminUserOrReadOnly,)     
+
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -113,6 +115,8 @@ class CategoriesViewSet(CreateRetrieveViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (IsAdminUserOrReadOnly,)     
+
 
 
 class GenresViewSet(CreateRetrieveViewSet):
@@ -121,6 +125,17 @@ class GenresViewSet(CreateRetrieveViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (IsAdminUserOrReadOnly,)    
+
+    def destroy(self, request, *args, **kwargs):
+        if self.kwargs.get('name') == '':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+     
+
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
