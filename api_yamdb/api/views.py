@@ -14,7 +14,8 @@ from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes, action
-from .permissions import ReviewCommentPermission, UserAdminPermission, IsAdminUserOrReadOnly
+from .permissions import (ReviewCommentPermission, UserAdminPermission,
+                          IsAdminUserOrReadOnly)
 from reviews.models import Title, Category, Genre, Review
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
@@ -95,8 +96,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    permission_classes = (IsAdminUserOrReadOnly,)     
-
+    permission_classes = (IsAdminUserOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -104,9 +104,8 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
 
-
-class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
-                            viewsets.GenericViewSet):
+class CreateRetrieveViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
+                            mixins.DestroyModelMixin, viewsets.GenericViewSet):
 
     pass
 
@@ -117,8 +116,7 @@ class CategoriesViewSet(CreateRetrieveViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdminUserOrReadOnly,)     
-
+    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class GenresViewSet(CreateRetrieveViewSet):
@@ -127,7 +125,7 @@ class GenresViewSet(CreateRetrieveViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdminUserOrReadOnly,)    
+    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -144,20 +142,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        if Review.objects.filter(title=title, author = self.request.user).exists():
+        if Review.objects.filter(title=title,
+                                 author=self.request.user).exists():
             raise ParseError
-        serializer.save(author = self.request.user, title=title)
+        serializer.save(author=self.request.user, title=title)
         int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
         title.rating = int_rating['score__avg']
         title.save(update_fields=['rating'])
-    
+
     def perform_update(self, serializer):
         serializer.save()
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
         title.rating = int_rating['score__avg']
         title.save(update_fields=['rating'])
-
 
 
 class CommentViewSet(viewsets.ModelViewSet):

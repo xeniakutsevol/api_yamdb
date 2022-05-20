@@ -12,6 +12,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
@@ -32,7 +33,7 @@ class Title(models.Model):
         Genre,
         related_name="titles", blank=True)
     rating = models.IntegerField(blank=True, null=True)
-    
+
     def __str__(self):
         return self.name
 

@@ -101,14 +101,13 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ['name', 'slug',]
+        fields = ['name', 'slug', ]
         model = Genre
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    #rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -139,7 +138,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        exclude =('review',)
+        exclude = ('review',)
         model = Comment
 
 
@@ -164,7 +163,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Вы можете написать только один отзыв на произведение'
             )
         return attrs
-
 
     class Meta:
         fields = '__all__'
