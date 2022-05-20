@@ -61,6 +61,12 @@ class Review(models.Model):
 
     class Meta:
         ordering = ["-pub_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
 
 
 class Comment(models.Model):
@@ -74,7 +80,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name="comments",
     )
-    text = models.TextField
+    text = models.TextField()
     pub_date = models.DateTimeField(
         auto_now_add=True,
         db_index=True,

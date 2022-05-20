@@ -1,4 +1,5 @@
 from rest_framework import serializers, validators
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from reviews.models import Title, Category, Genre, Comment
 from reviews.models import Review, Title
@@ -116,13 +117,13 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
-        queryset=Genre.objects,
+        queryset=Genre.objects.all(),
         slug_field='slug',
         many=True
     )
 
     category = serializers.SlugRelatedField(
-        queryset=Category.objects,
+        queryset=Category.objects.all(),
         slug_field='slug'
     )
 
@@ -145,34 +146,26 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='username'
+        slug_field='username',
+    )
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
     )
 
     def validate(self, attrs):
         is_exist = Review.objects.filter(
             author=self.context['request'].user,
-            title=self.context['view'].kwargs.get('title_id')).exists()
+            title=get_object_or_404(
+                Title,
+                pk=self.context['view'].kwargs.get('title_id'))).exists()
         if is_exist and self.context['request'].method == 'POST':
             raise serializers.ValidationError(
                 'Вы можете написать только один отзыв на произведение'
             )
         return attrs
 
+
     class Meta:
-        exclude =('title',)
+        fields = '__all__'
         model = Review
-        unique_together = ('author', 'title')
-        extra_kwargs = {
-            'title_id': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all())
-                ]
-            },
-            'author': {
-               'validators': [
-                   validators.UniqueValidator(
-                        queryset=User.objects.all())
-                ]
-            },
-        }
