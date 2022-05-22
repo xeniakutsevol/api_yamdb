@@ -32,7 +32,6 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre,
         related_name="titles", blank=True)
-    rating = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -45,7 +44,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name="reviews",
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1, message="Оценка 1-10!"),
             MaxValueValidator(10, message="Оценка 1-10!")
