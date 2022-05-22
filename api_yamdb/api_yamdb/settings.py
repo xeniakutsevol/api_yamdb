@@ -27,11 +27,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'rest_framework',
+    'django_filters',
+    'rest_framework_simplejwt',
     'users',
     'reviews',
     'api',
-    'django_filters',
-    'rest_framework_simplejwt',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -98,7 +98,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 

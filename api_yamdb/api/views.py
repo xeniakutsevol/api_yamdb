@@ -3,19 +3,18 @@ from django.db.models import Avg
 from iniconfig import ParseError
 from rest_framework import viewsets, permissions, status, mixins, filters
 from django.contrib.auth import get_user_model
-from .serializers import (SignUpSerializer, UserAdminSerializer,
+from .serializers import (SignUpSerializer, UsersSerializer,
                           CommentSerializer, ReviewSerializer,
                           TitleReadSerializer, CategorySerializer,
-                          GenreSerializer, TitleWriteSerializer,
-                          UserAdminPatchSerializer)
+                          GenreSerializer, TitleWriteSerializer,)
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes, action
-from .permissions import (ReviewCommentPermission, UserAdminPermission,
-                          IsAdminUserOrReadOnly)
+from .permissions import (ReviewCommentPermission, UsersPermission,
+                          IsAdminUserOrReadOnly, IsAdminOrSuperuser)
 from reviews.models import Title, Category, Genre, Review
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
@@ -29,16 +28,12 @@ class SignUpViewSet(viewsets.ModelViewSet):
     serializer_class = SignUpSerializer
     permission_classes = (permissions.AllowAny,)
 
+# Все описала в create, поскольку в perform_create он игнорирует статус 200 и
+# возвращает 201 (по тестам должно быть 200).
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK,
-                        headers=headers)
-
-    def perform_create(self, serializer):
-        serializer.save()
         user = get_object_or_404(
             User, username=serializer.validated_data.get('username'))
         token = default_token_generator.make_token(user=user)
@@ -46,6 +41,9 @@ class SignUpViewSet(viewsets.ModelViewSet):
         send_mail(subject='Confirmation code', message=token,
                   from_email='YaMBD',
                   recipient_list=(serializer.validated_data.get('email'),))
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK,
+                        headers=headers)
 
 
 @api_view(['POST'])
@@ -61,22 +59,39 @@ def obtain_token(request):
     return Response(status=400)
 
 
-class UsersAdminViewSet(viewsets.ModelViewSet):
+class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = (permissions.IsAuthenticated, UserAdminPermission,)
+    serializer_class = UsersSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
 
+    def get_permissions(self):
+        if self.kwargs.get('username') == 'me':
+            permission_classes = (permissions.IsAuthenticated,
+                                  UsersPermission,)
+        else:
+            permission_classes = (IsAdminOrSuperuser, UsersPermission,)
+        return [permission() for permission in permission_classes]
+
     @action(
-        methods=['get', 'patch'],
+        methods=['patch'],
         detail=True,
         url_path='me'
     )
     def get_object(self):
         if self.kwargs.get('username') == 'me':
+            self.check_object_permissions(self.request, self.request.user)
             return self.request.user
-        return super(UsersAdminViewSet, self).get_object()
+        return super(UsersViewSet, self).get_object()
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        if (self.kwargs.get('username') == 'me'
+           and request.data.get('role') is not None):
+            return Response(data={'role': 'user'},
+                            status=status.HTTP_403_FORBIDDEN)
+        return self.update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         if self.kwargs.get('username') == 'me':
@@ -84,12 +99,6 @@ class UsersAdminViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def get_serializer_class(self):
-        if (self.request.method == 'PATCH'
-           and self.kwargs.get('username') == 'me'):
-            return UserAdminPatchSerializer
-        return UserAdminSerializer
 
 
 class TitlesViewSet(viewsets.ModelViewSet):

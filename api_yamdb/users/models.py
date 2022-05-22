@@ -26,3 +26,15 @@ class User(AbstractUser):
             models.CheckConstraint(check=~Q(username='me'),
                                    name='username_not_me')
         ]
+
+    @property
+    def is_user(self):
+        return self.role == 'user'
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
