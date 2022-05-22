@@ -18,6 +18,14 @@ class User(AbstractUser):
     email = models.EmailField(max_length=254, blank=False, unique=True)
     confirmation_code = models.TextField('Код подтверждения', blank=True)
 
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
+
     def __str__(self):
         return self.username
 

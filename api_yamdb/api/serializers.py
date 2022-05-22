@@ -1,8 +1,10 @@
 from rest_framework import serializers, validators
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from reviews.models import Title, Category, Genre, Comment
 from reviews.models import Review, Title
+
 
 User = get_user_model()
 
@@ -108,11 +110,13 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    #rating = serializers.IntegerField(read_only=True)
-
+    rating = serializers.IntegerField()
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'year', 'description', 'category',
+                 'genre', 'rating',)
         model = Title
+
+    
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -128,7 +132,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields =  ('id', 'name', 'year', 'description', 'genre', 'category')
         model = Title
 
 

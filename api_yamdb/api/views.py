@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db import models
 from django.db.models import Avg
 from iniconfig import ParseError
 from rest_framework import viewsets, permissions, status, mixins, filters
@@ -95,7 +96,9 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    permission_classes = (IsAdminUserOrReadOnly,)     
+    permission_classes = (IsAdminUserOrReadOnly,)
+    queryset = Title.objects.all().annotate(
+        rating=models.Avg('reviews__score', output_field=models.SmallIntegerField()))
 
 
     def get_serializer_class(self):
@@ -147,17 +150,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if Review.objects.filter(title=title, author = self.request.user).exists():
             raise ParseError
         serializer.save(author = self.request.user, title=title)
-        int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
-        title.rating = int_rating['score__avg']
-        title.save(update_fields=['rating'])
-    
+        #int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
+        #title.rating = int_rating['score__avg']
+        #title.save(update_fields=['rating'])
+  
     def perform_update(self, serializer):
         serializer.save()
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
-        title.rating = int_rating['score__avg']
-        title.save(update_fields=['rating'])
-
+        #title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        #int_rating = Review.objects.filter(title=title).aggregate(Avg('score'))
+        #title.rating = int_rating['score__avg']
+        #title.save(update_fields=['rating'])
 
 
 class CommentViewSet(viewsets.ModelViewSet):
