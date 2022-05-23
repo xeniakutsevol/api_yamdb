@@ -23,17 +23,12 @@ from .filters import TitleFilter
 User = get_user_model()
 
 
-class SignUpViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = SignUpSerializer
-    permission_classes = (permissions.AllowAny,)
-
-# Все описала в create, поскольку в perform_create он игнорирует статус 200 и
-# возвращает 201 (по тестам должно быть 200).
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def signup(request):
+    serializer = SignUpSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
         user = get_object_or_404(
             User, username=serializer.validated_data.get('username'))
         token = default_token_generator.make_token(user=user)
@@ -41,9 +36,8 @@ class SignUpViewSet(viewsets.ModelViewSet):
         send_mail(subject='Confirmation code', message=token,
                   from_email='YaMBD',
                   recipient_list=(serializer.validated_data.get('email'),))
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK,
-                        headers=headers)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -93,6 +87,10 @@ class UsersViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
         return self.update(request, *args, **kwargs)
 
+# Тут не проверка, что юзернейм!= me
+# Это обработка случаев с url /api/v1/users/me/ - профиль пользователя
+# В сериализаторе есть (и была) проверка на юзернейм!= me
+# В первой итерации проверяла это в пермишене, была одна строка
     def destroy(self, request, *args, **kwargs):
         if self.kwargs.get('username') == 'me':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

@@ -1,4 +1,4 @@
-from rest_framework import serializers, validators
+from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from reviews.models import Title, Category, Genre, Comment
@@ -7,31 +7,30 @@ from reviews.models import Review, Title
 User = get_user_model()
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'email')
-        extra_kwargs = {
-            'username': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all()
-                    )
-                ]
-            },
-            'email': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all()
-                    )
-                ]
-            }
-        }
+class SignUpSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, validators=[])
+    email = serializers.EmailField(validators=[])
 
     def validate_username(self, data):
-        if data == 'me':
+        username = User.objects.filter(username=data).exists()
+        if data == 'me' or username:
             raise serializers.ValidationError('Невалидный username.')
         return data
+
+    def validate_email(self, data):
+        email_db = User.objects.filter(email=data).exists()
+        if email_db:
+            raise serializers.ValidationError('Email существует.')
+        return data
+
+    def create(self, validated_data):
+        return User.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        return instance
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -39,27 +38,18 @@ class UsersSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email', 'role', 'bio', 'first_name',
                   'last_name')
-        extra_kwargs = {
-            'username': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all()
-                    )
-                ]
-            },
-            'email': {
-                'validators': [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all()
-                    )
-                ]
-            }
-        }
 
-    def validate_username(self, data):
-        if data == 'me':
-            raise serializers.ValidationError('Невалидный username.')
-        return data
+        def validate_username(self, data):
+            username = User.objects.filter(username=data).exists()
+            if data == 'me' or username:
+                raise serializers.ValidationError('Невалидный username.')
+            return data
+
+        def validate_email(self, data):
+            email_db = User.objects.filter(email=data).exists()
+            if email_db:
+                raise serializers.ValidationError('Email существует.')
+            return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
